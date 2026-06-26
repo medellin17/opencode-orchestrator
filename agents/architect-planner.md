@@ -13,6 +13,7 @@ permission:
   task: deny
   bash:
     "*": deny
+  lsp: allow
 ---
 
 # Architect & Planner

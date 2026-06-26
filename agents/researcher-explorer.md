@@ -14,6 +14,7 @@ permission:
   task: deny
   bash:
     "*": deny
+  lsp: allow
   webfetch: allow
 ---
 

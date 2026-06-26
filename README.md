@@ -77,21 +77,21 @@
 
 | Агент | Роль | Доступ |
 |-------|------|--------|
-| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, spot-check'ит, синтезирует отчёт. | `task`, `skill`, `read`, `grep` (только для верификации) |
-| `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read-only |
-| `architect-planner` | Проектировщик. Создаёт технические спецификации и планы в `PLAN.md`. | Read-only |
-| `implementer-builder` | Разработчик. Пишет код, тесты, документацию по спецификации. | Read, Write, Edit, Bash |
-| `reviewer-critic` | Рецензент. Quality gate — проверяет планы и код. | Read-only |
-| `integrator-qa` | Тестировщик. Запускает тесты, проверяет соответствие ТЗ. | Read, Bash |
-| `debug` | Отладчик. Поиск и устранение корневых причин багов. | Read, Write, Edit, Bash |
-| `doc-maintainer` | Документатор. Держит проектную базу знаний в актуальном состоянии. | Read, Write |
-| `content-writer` | Копирайтер. Пишет статьи, документацию, маркетинговые тексты. | Read, Write |
-| `data-analyst` | Аналитик. Обрабатывает данные, строит отчёты, визуализирует. | Read, Write, Bash |
-| `ux-designer` | UX-дизайнер. Пользовательские сценарии, wireframes, интерфейсы. | Read, Write |
-| `code-reviewer` | Код-ревьюер. Структурированный 5-мерный анализ кода. | Read |
-| `test-engineer` | Тест-инженер. Генерация тестов, coverage-анализ. | Read, Write, Bash |
-| `security-auditor` | Аудитор безопасности. Поиск уязвимостей, OWASP-методология. | Read, Bash |
-| `skills-indexer` | Индексатор скиллов. Сканирует и мапит скиллы на агентов. | Read, Write, Bash |
+| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, spot-check'ит, синтезирует отчёт. | `read`, `grep`, `task` (селективный), `skill` (селективный) |
+| `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read, Grep, Glob, Skill, LSP, Webfetch |
+| `architect-planner` | Проектировщик. Создаёт технические спецификации и планы. | Read, Write, Grep, Skill, LSP |
+| `implementer-builder` | Разработчик. Пишет код, тесты, документацию по спецификации. | Read, Write, Edit, Grep, Skill, Bash, Webfetch |
+| `reviewer-critic` | Рецензент. Quality gate — проверяет планы и код. | Read, Grep, Skill, LSP |
+| `integrator-qa` | Тестировщик. Запускает тесты, проверяет соответствие ТЗ. | Read, Grep, Skill, Bash |
+| `debug` | Отладчик. Поиск и устранение корневых причин багов. | Read, Write, Edit, Bash, Webfetch |
+| `doc-maintainer` | Документатор. Держит проектную базу знаний в актуальном состоянии. | Read, Write, Edit, Glob, Grep, Bash |
+| `content-writer` | Копирайтер. Пишет статьи, документацию, маркетинговые тексты. | Read, Write, Edit, Grep, Skill, Bash (ask), Webfetch |
+| `data-analyst` | Аналитик. Обрабатывает данные, строит отчёты, визуализирует. | Read, Write, Edit, Grep, Skill, Bash (селективный), Webfetch |
+| `ux-designer` | UX-дизайнер. Пользовательские сценарии, wireframes, интерфейсы. | Read, Write, Edit, Grep, Skill, Webfetch |
+| `code-reviewer` | Код-ревьюер. Структурированный 5-мерный анализ кода. | `*` (все разрешения) |
+| `test-engineer` | Тест-инженер. Генерация тестов, coverage-анализ. | `*` (все разрешения) |
+| `security-auditor` | Аудитор безопасности. Поиск уязвимостей, OWASP-методология. | `*` (все разрешения) |
+| `skills-indexer` | Индексатор скиллов. Сканирует и мапит скиллы на агентов. | Read, Write, Edit, Glob, Grep, Bash |
 
 ---
 
@@ -179,6 +179,7 @@ agentic-orchestrator-v1-better/
 | Weak model mindset | отсутствовал | отдельный раздел + гайд |
 | QA stop criteria | «max 3 iterations» | пороги: cosmetic → stop, functional → 3, critical → 4+ alert |
 | Task granularity | не было | когда 1 агент vs несколько |
+| Fine-grained decomposition | дефолт — fewer dispatches | дефолт — split more, merge only for trivial tasks |
 | Artifact tracking | не было | обязательные пути в финальном отчёте |
 | Save locations | отсутствовали у ~18 файлов | добавлены везде |
 | Forced-finding quotas | «найти минимум N» в 7 скиллах | заменены на «если есть — перечисли, если нет — напиши» |
@@ -187,6 +188,8 @@ agentic-orchestrator-v1-better/
 | `debug` | 301 строка, дубли секций | ~130 строк, линейный workflow |
 | `skills-indexer` | отсутствовал SKILL.md | создан |
 | Spot-check verification | оркестратор не читал файлы | `read`/`grep` для точечной проверки, risk_areas + confidence у субагентов |
+| `tools:` format | deprecated `tools:` секция (true/false) | миграция на `permission:` (allow/deny) во всех 15 агентах |
+| LSP | ни один агент не имел LSP | `lsp: allow` добавлен researcher, architect, reviewer |
 
 ---
 
