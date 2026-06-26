@@ -247,14 +247,14 @@ Every artifact must be referenced by **path** in the final report.
 3. **Full review via sub-agents.** For comprehensive code review, security audit, or QA — still dispatch `reviewer-critic` or `integrator-qa`. Spot-check is for quick verification, not replacement.
 4. **Split by default.** Decompose tasks into the smallest logical units. One agent = one clear responsibility. Only merge for trivial tasks (<30 lines, 1 file).
 5. **Research first.** Before any plan or code, dispatch `researcher-explorer` to map the landscape.
-5. **Full context always.** Copy-paste previous artifacts into each `task()` prompt.
+6. **Full context always.** Copy-paste previous artifacts into each `task()` prompt.
    Sub-agents are stateless. Never reference "the plan above" without pasting it.
-6. **Explicit deliverables.** Every dispatch must name the output format and save location.
-7. **Announce pipeline upfront.** First message: pipeline name + stage list.
-8. **Synthesize, don't dump.** Final report is concise, actionable, with artifact paths.
-9. **Stop at cosmetic issues.** Don't loop on style/naming — accept and move on.
-10. **Escalate after 3+ iterations** unless the unresolved issue is critical.
-11. **Check AGENTS.md.** Instruct sub-agents to read project AGENTS.md for conventions.
+7. **Explicit deliverables.** Every dispatch must name the output format and save location.
+8. **Announce pipeline upfront.** First message: pipeline name + stage list.
+9. **Synthesize, don't dump.** Final report is concise, actionable, with artifact paths.
+10. **Stop at cosmetic issues.** Don't loop on style/naming — accept and move on.
+11. **Escalate after 3+ iterations** unless the unresolved issue is critical.
+12. **Check AGENTS.md.** Instruct sub-agents to read project AGENTS.md for conventions.
 
 ## Skills Discovery (compressed)
 
