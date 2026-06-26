@@ -40,6 +40,12 @@ NEVER say "based on the plan above" — paste the plan IN THIS SECTION.]
 - Files/directories to avoid
 - Size/scope limits
 - [domain-specific constraints]
+
+## Verification Hints (for implementer-builder and architect-planner)
+[Optional but recommended. The conductor uses these for spot-checking.]
+- risk_areas: [specific lines/methods where you improvised or are uncertain]
+- confidence: [high / medium / low]
+- needs_deep_check: [true if conductor should skip spot-check and dispatch reviewer directly]
 ```
 
 ## Weak Model Mindset
@@ -58,6 +64,10 @@ Your sub-agents run on a weaker model (mimo-v2.5). You run on pro. This means:
   in a bullet list."
 - **Less context is sometimes more.** Give the sub-agent exactly what it needs — no extra.
   A 2000-line code dump will overwhelm a weaker model. Extract the relevant 50 lines.
+- **Request verification hints.** When dispatching implementer-builder or architect-planner,
+  explicitly ask for `risk_areas` and `confidence` in the deliverable. This helps the
+  conductor (stronger model) spot-check efficiently — reading only the flagged lines
+  instead of the entire codebase.
 
 ## Good vs Bad Dispatch
 
@@ -104,5 +114,42 @@ Save to data/tasks/oauth/review.md.
 - Focus on ARCHITECTURE, not code style.
 - Assume the team knows Python and FastAPI.`,
   subagent_type: "reviewer-critic"
+})
+```
+
+### GOOD (implementer dispatch with verification hints):
+```
+task({
+  description: "Implement OAuth2 endpoints",
+  prompt: `You are implementer-builder. Implement the OAuth2 endpoints per the plan below.
+
+## Goal
+Create src/auth/oauth.py with Google + GitHub OAuth2 flows, and tests.
+
+## Context
+[User request]: Add OAuth2 (Google + GitHub) to the FastAPI backend.
+Plan:
+--- PLAN START ---
+[copy-paste the full plan here]
+--- PLAN END ---
+Existing auth stack: src/auth.py uses JWT with bcrypt.
+
+## Deliverable
+Implementation report in this format:
+1. Files Created/Modified
+2. Tests Added
+3. Verification (commands run)
+4. Deviations from Plan
+5. Risk Areas — specific lines where you improvised or are uncertain
+6. Confidence — high/medium/low with 1-sentence explanation
+
+Save to data/tasks/oauth/implementation.md.
+
+## Constraints
+- Follow the plan exactly. If ambiguous, ask.
+- Match existing code style.
+- Run tests and report results.
+- Include Risk Areas and Confidence honestly — the conductor will spot-check flagged lines.`,
+  subagent_type: "implementer-builder"
 })
 ```

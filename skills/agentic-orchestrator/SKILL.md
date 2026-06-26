@@ -16,7 +16,9 @@ User Task (any domain)
 Conductor (orchestrator-conductor)
     |---> researcher-explorer   (read-only investigation)
     |---> architect-planner     (design & strategy)
+    |---> [conductor spot-check] (read/grep verification of key areas)
     |---> implementer-builder   (execution & creation)
+    |---> [conductor spot-check] (read/grep verification of risk areas)
     |---> reviewer-critic       (audit & validation)
     |---> integrator-qa         (verification & testing)
     |---> content-writer        (writing & copywriting)
@@ -34,7 +36,7 @@ Final Synthesis Report
 
 | Agent | Role | Mode | Key Tools | Domains |
 |-------|------|------|-----------|---------|
-| `orchestrator-conductor` | **Primary conductor.** Plans, delegates, synthesizes. | primary | `task`, `skill` | All |
+| `orchestrator-conductor` | **Primary conductor.** Plans, delegates, spot-checks, synthesizes. | primary | `task`, `skill`, `read`, `grep` | All |
 | `researcher-explorer` | **Read-only exploration.** Maps code, data, content. | subagent | `read`, `grep`, `glob`, `webfetch` | All |
 | `architect-planner` | **Design & strategy.** Writes specs, no implementation. | subagent | `read`, `grep` (read-only) | Software, Systems, Content |
 | `implementer-builder` | **Execution specialist.** Writes code, configs, scripts. | subagent | `read`, `edit`, `write`, `bash` | Software, Engineering |
@@ -114,15 +116,18 @@ researcher-explorer  →  architect-planner  →  reviewer-critic
 
 #### 4. `build` — Straightforward Execution
 ```
-researcher-explorer  →  architect-planner  →  implementer-builder  →  integrator-qa
+researcher-explorer  →  architect-planner  →  implementer-builder  →  [conductor spot-check]  →  integrator-qa
 ```
 **Use when**: Clear spec, low risk. Collects context first, plans, then executes.
+Conductor spot-checks the implementation before final QA.
 
 #### 5. `build-review` — Standard Robust Pipeline
 ```
-researcher-explorer  →  architect-planner  →  reviewer-critic  →  implementer-builder  →  reviewer-critic  →  integrator-qa
+researcher-explorer  →  architect-planner  →  [conductor spot-check]  →  reviewer-critic
+                      →  implementer-builder  →  [conductor spot-check]  →  reviewer-critic  →  integrator-qa
 ```
 **Use when**: Standard quality bar. Most common pipeline.
+Conductor spot-checks after architect (plan) and after implementer (code) before each review.
 
 #### 6. `debug-fix` — Troubleshooting
 ```
@@ -138,10 +143,12 @@ reviewer-critic  ∥  security-auditor  →  synthesize
 
 #### 8. `full-cycle` — Mission-Critical Task
 ```
-researcher-explorer  →  architect-planner  →  reviewer-critic  →  implementer-builder
-                      →  reviewer-critic  →  integrator-qa  →  doc-maintainer
+researcher-explorer  →  architect-planner  →  [conductor spot-check]  →  reviewer-critic
+                      →  implementer-builder  →  [conductor spot-check]  →  reviewer-critic
+                      →  integrator-qa  →  doc-maintainer
 ```
 **Use when**: Complex, high-impact work where every phase needs validation, and docs must be updated.
+Conductor spot-checks after both architect and implementer before each review.
 
 #### 9. Auto-Documentation Modifier
 ```
@@ -224,9 +231,10 @@ After the pipeline completes, the conductor produces:
 ## Rules for Conductors
 
 1. **Never execute work yourself.** Always delegate to specialized sub-agents.
-2. **Never review outputs yourself.** Use `reviewer-critic` for validation.
-3. **No direct analysis of issues.** Conductor must NOT read files or analyze code directly. Always dispatch sub-agents (e.g., `researcher-explorer`) first to collect context.
-4. **Adaptive Planning & Single Lead Agent Approach:**
+2. **Spot-check before full review.** After key sub-agent outputs (implementer, architect), use your `read`/`grep` access to verify critical areas. If you find issues — dispatch implementer to fix directly. Only dispatch `reviewer-critic` for comprehensive review.
+3. **Full review via sub-agents.** For security audits, deep code review, or QA — still use `reviewer-critic` or `integrator-qa`. Spot-check is for fast verification, not a replacement.
+4. **No direct exploration.** Conductor must NOT read files for exploration or context-gathering. Always dispatch `researcher-explorer` for that. Read access is ONLY for verification of sub-agent work.
+5. **Adaptive Planning & Single Lead Agent Approach:**
    - For complex, multi-file features, architectural changes, or refactoring, planning is mandatory. Run `architect-planner` first.
    - For simple, localized, or straightforward tasks (e.g., modifying a single file, fixing a simple bug, writing a single test, minor edits), bypass the planning/review steps and dispatch `implementer-builder` or `debug` directly as a Single Lead Agent to minimize token overhead.
 5. **Always announce the chosen pipeline** at the start of execution.

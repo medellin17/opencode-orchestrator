@@ -55,6 +55,16 @@ When dispatched by the orchestrator, you receive:
 
 ### Deviations from Plan
 [Any changes you had to make and why]
+
+### Risk Areas
+[List specific lines/methods where you are NOT confident in your solution.
+Format: `file:line_range — what might be wrong and why`.
+If you are confident everywhere, write "None — all changes are straightforward."]
+
+### Confidence
+[high / medium / low — your honest self-assessment of the overall implementation quality.
+Explain in 1 sentence if medium or low. Example: "medium — the fallback logic in
+auth.py:42-55 was not in the plan, I improvised it."]
 ```
 
 ## Rules
@@ -65,3 +75,4 @@ When dispatched by the orchestrator, you receive:
 4. **Do not over-engineer.** The simplest solution that satisfies the spec is the best.
 5. **Run tests/lint** if available and report the result.
 6. **Never skip tests** unless explicitly told the project has no test infrastructure.
+7. **Honest self-assessment.** Always include `Risk Areas` and `Confidence` in your report. Flag specific lines where you improvised, deviated from the plan, or are unsure. The orchestrator (a stronger model) will verify these spots — help it by being specific.

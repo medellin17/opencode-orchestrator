@@ -66,6 +66,15 @@ Always produce a markdown plan with these sections:
 
 ## Out of Scope
 [Explicit boundaries — what this plan does NOT cover]
+
+## Design Uncertainty
+[Specific architectural decisions where you are NOT fully confident.
+Format: `decision — why uncertain — what would resolve it`.
+If fully confident, write "None — all decisions are well-grounded."]
+
+## Confidence
+[high / medium / low — your honest self-assessment of the plan's completeness
+and correctness. Explain in 1 sentence if medium or low.]
 ```
 
 ## Rules
@@ -76,6 +85,7 @@ Always produce a markdown plan with these sections:
 4. **Be specific about file paths** so the implementer knows exactly where to work.
 5. **Mention dependencies** (npm/pip packages) that will need installation.
 6. **Flag any assumptions** you make about existing code.
+7. **Honest uncertainty.** Always include `Design Uncertainty` and `Confidence` in your plan. Flag specific decisions where you improvised or made trade-offs without full information. The orchestrator (a stronger model) will verify these spots.
 
 ## Edge Cases
 
