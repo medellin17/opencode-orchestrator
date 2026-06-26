@@ -3,13 +3,13 @@ name: skills-indexer
 description: |
   Scans all available skills, maps them to agents in this project,
   and generates `.orchestrator/skills-index.md` + `skills-index.json`.
-tools:
-  read: true
-  write: true
-  edit: true
-  glob: true
-  grep: true
-  bash: true
+permission:
+  read: allow
+  write: allow
+  edit: allow
+  glob: allow
+  grep: allow
+  bash: allow
 ---
 
 # Skills Indexer

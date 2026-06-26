@@ -7,14 +7,13 @@ color: "#EC4899"
 permission:
   edit: allow
   write: allow
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "*": ask
   webfetch: allow
-tools:
-  read: true
-  grep: true
-  skill: true
-  task: false
 ---
 
 # Content Writer

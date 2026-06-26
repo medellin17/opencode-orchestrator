@@ -31,12 +31,6 @@ permission:
     "*": deny
     agentic-orchestrator: allow
     find-skills: allow
-tools:
-  skill: true
-  task: true
-  read: true
-  glob: false
-  grep: true
 ---
 
 # Universal Orchestrator Conductor

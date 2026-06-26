@@ -7,17 +7,16 @@ color: "#14B8A6"
 permission:
   edit: allow
   write: allow
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "python*": allow
     "node*": allow
     "jupyter*": allow
     "*": ask
   webfetch: allow
-tools:
-  read: true
-  grep: true
-  skill: true
-  task: false
 ---
 
 # Data Analyst

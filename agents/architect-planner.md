@@ -7,13 +7,12 @@ color: "#8B5CF6"
 permission:
   edit: deny
   write: allow
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "*": deny
-tools:
-  read: true
-  grep: true
-  skill: true
-  task: false
 ---
 
 # Architect & Planner

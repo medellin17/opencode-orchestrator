@@ -3,13 +3,13 @@ name: doc-maintainer
 description: |
   Maintains project documentation (AGENTS.md, knowledge/, rules/) in sync with code changes.
   Updates docs after features, refactors, or bug fixes. Runs doc-scaffold, doc-update, doc-audit, doc-pruner pipelines.
-tools:
-  read: true
-  write: true
-  edit: true
-  glob: true
-  grep: true
-  bash: true
+permission:
+  read: allow
+  write: allow
+  edit: allow
+  glob: allow
+  grep: allow
+  bash: allow
 mode: subagent
 ---
 

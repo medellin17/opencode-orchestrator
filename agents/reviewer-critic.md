@@ -7,13 +7,12 @@ color: "#EF4444"
 permission:
   edit: deny
   write: deny
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "*": deny
-tools:
-  read: true
-  grep: true
-  skill: true
-  task: false
 ---
 
 # Reviewer & Critic

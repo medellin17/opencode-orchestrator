@@ -7,14 +7,12 @@ color: "#06B6D4"
 permission:
   edit: deny
   write: deny
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "*": allow
-tools:
-  read: true
-  grep: true
-  bash: true
-  skill: true
-  task: false
 ---
 
 # Integrator & QA Engineer

@@ -7,15 +7,14 @@ color: "#10B981"
 permission:
   edit: deny
   write: deny
+  read: allow
+  grep: allow
+  glob: allow
+  skill: allow
+  task: deny
   bash:
     "*": deny
   webfetch: allow
-tools:
-  read: true
-  grep: true
-  glob: true
-  skill: true
-  task: false
 ---
 
 # Researcher & Explorer

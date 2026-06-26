@@ -7,14 +7,13 @@ color: "#F59E0B"
 permission:
   edit: allow
   write: allow
+  read: allow
+  grep: allow
+  skill: allow
+  task: deny
   bash:
     "*": allow
   webfetch: allow
-tools:
-  read: true
-  grep: true
-  skill: true
-  task: false
 ---
 
 # Implementer & Builder
