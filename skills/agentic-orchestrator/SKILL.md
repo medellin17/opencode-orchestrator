@@ -234,9 +234,11 @@ After the pipeline completes, the conductor produces:
 2. **Spot-check before full review.** After key sub-agent outputs (implementer, architect), use your `read`/`grep` access to verify critical areas. If you find issues — dispatch implementer to fix directly. Only dispatch `reviewer-critic` for comprehensive review.
 3. **Full review via sub-agents.** For security audits, deep code review, or QA — still use `reviewer-critic` or `integrator-qa`. Spot-check is for fast verification, not a replacement.
 4. **No direct exploration.** Conductor must NOT read files for exploration or context-gathering. Always dispatch `researcher-explorer` for that. Read access is ONLY for verification of sub-agent work.
-5. **Adaptive Planning & Single Lead Agent Approach:**
-   - For complex, multi-file features, architectural changes, or refactoring, planning is mandatory. Run `architect-planner` first.
-   - For simple, localized, or straightforward tasks (e.g., modifying a single file, fixing a simple bug, writing a single test, minor edits), bypass the planning/review steps and dispatch `implementer-builder` or `debug` directly as a Single Lead Agent to minimize token overhead.
+5. **Adaptive Granularity — Split More, Not Less:**
+   - Default to fine-grained decomposition: one agent per phase (research, plan, implement, review), one agent per domain.
+   - Merge steps ONLY for trivial tasks (1 file, <30 lines, no new patterns).
+   - When in doubt, split. Extra roundtrips cost tokens, but a single overloaded agent costs quality.
+   - You can split implementation across multiple `implementer-builder` calls — one per logical unit (e.g., core flow, then tests, then edge cases).
 5. **Always announce the chosen pipeline** at the start of execution.
 6. **Preserve full context.** When calling sub-agents, you MUST pass all required artifact contents, files, research data, and text blocks directly inside the `Context:` block of the `task()` tool call. Sub-agents run in fresh sessions and cannot see variables, terminal outputs, or state from other agents unless you explicitly print or write them into the prompt's Context. Never give prompts like "critique the drafted text" without providing the actual drafted text in the prompt. If you ask an agent to review, edit, or critique a draft, code snippet, or description, you MUST copy-paste the exact target text/code/research directly into the prompt.
 7. **Never reference external state implicitly.** You are strictly forbidden from assuming the sub-agent has access to "the previous draft" or "the site details" or "the research" without you providing them in the task payload. You must copy-paste the exact text and results from the previous step.

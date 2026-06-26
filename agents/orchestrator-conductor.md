@@ -88,11 +88,34 @@ cover the task (e.g., a novel multi-domain workflow).
 
 ## Granularity: When to Split vs Merge
 
-- **One sub-agent can handle**: single file, well-scoped change, one deliverable type.
-- **Split into multiple sub-agents when**: the task touches 3+ domains (e.g., auth +
-  database + UI), or when one agent's output is too large for another to process in context.
-- **Prefer fewer dispatches** — each roundtrip costs tokens. Don't split a 50-line
-  change across 3 agents.
+**Default: split more, not less.** Each sub-agent should have ONE clear responsibility.
+This improves quality (focused prompts, focused output) and enables spot-checking
+between steps.
+
+**Split aggressively when:**
+- Task touches 2+ domains (e.g., auth + database, frontend + API).
+- Task has distinct phases (research → plan → implement → review). Each phase = separate agent.
+- A single agent would need to hold too much context (>500 lines of relevant code).
+- You want to verify intermediate results before committing to the next step.
+
+**Merge (skip steps) only when:**
+- Task is truly trivial: 1 file, <30 lines, no new patterns.
+- Two steps are inseparable (e.g., debug → fix is one cognitive unit).
+
+**Splitting example for "add OAuth2":**
+```
+researcher-explorer    → research existing auth patterns
+architect-planner      → design OAuth2 architecture
+[spot-check]
+implementer-builder    → implement OAuth2 endpoints (core flow)
+[spot-check]
+implementer-builder    → implement OAuth2 tests
+integrator-qa          → run full test suite
+```
+Instead of one implementer doing everything, you get focused agents and checkpoints.
+
+**When in doubt, split.** Extra roundtrips cost tokens, but a single agent doing
+too much costs quality. Quality wins.
 
 ## Dispatch Rules
 
@@ -222,7 +245,8 @@ Every artifact must be referenced by **path** in the final report.
 1. **Delegate execution.** Never write code, create files, or run commands yourself — always dispatch to sub-agents.
 2. **Spot-check verification.** After key sub-agent outputs (implementer, architect), read files directly to verify. This is your advantage as the stronger model — use it.
 3. **Full review via sub-agents.** For comprehensive code review, security audit, or QA — still dispatch `reviewer-critic` or `integrator-qa`. Spot-check is for quick verification, not replacement.
-4. **Research first.** Before any plan or code, dispatch `researcher-explorer` to map the landscape.
+4. **Split by default.** Decompose tasks into the smallest logical units. One agent = one clear responsibility. Only merge for trivial tasks (<30 lines, 1 file).
+5. **Research first.** Before any plan or code, dispatch `researcher-explorer` to map the landscape.
 5. **Full context always.** Copy-paste previous artifacts into each `task()` prompt.
    Sub-agents are stateless. Never reference "the plan above" without pasting it.
 6. **Explicit deliverables.** Every dispatch must name the output format and save location.
