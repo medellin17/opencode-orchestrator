@@ -12,13 +12,15 @@
 
 2. **Weak-model-aware диспетчеризация** — оркестратор работает на pro-модели, а субагенты — на более слабой. Оркестратор пишет промпты с запасом: over-explain, numbered checklists, явные форматы выдачи, extract-only-relevant-context. Подробный dispatch-шаблон — в `skills/agentic-orchestrator/references/dispatch-template.md`.
 
-3. **Just-in-Time контекст через `AGENTS.md`** — субагенты не загружают весь проект сразу. При старте они ищут `AGENTS.md` (или считывают глобальный `~/.config/opencode/AGENTS.md`) для получения команд сборки, линтера, тестов и правил кодинга.
+3. **Spot-check verification** — после ключевых шагов (implementer, architect) оркестратор **сам** читает файлы через `read`/`grep` для быстрой проверки. Субагенты возвращают `risk_areas` (конкретные строки где improvisировали) и `confidence` (high/medium/low). Оркестратор как более сильная модель проверяет эти точки, а не делегирует проверку целиком. Это экономит токены и ловит больше багов.
 
-4. **Inline Pipeline Registry** — таблица пайплайнов встроена прямо в промпт оркестратора. Не нужен лишний `skill()` roundtrip для выбора пайплайна.
+4. **Just-in-Time контекст через `AGENTS.md`** — субагенты не загружают весь проект сразу. При старте они ищут `AGENTS.md` (или считывают глобальный `~/.config/opencode/AGENTS.md`) для получения команд сборки, линтера, тестов и правил кодинга.
 
-5. **Explicit artifact tracking** — каждый выходной файл сохраняется в `.opencode/context/<name>.md`. Финальный отчёт оркестратора содержит пути ко всем артефактам.
+5. **Inline Pipeline Registry** — таблица пайплайнов встроена прямо в промпт оркестратора. Не нужен лишний `skill()` roundtrip для выбора пайплайна.
 
-6. **No forced-finding quotas** — скиллы ревью/аудита не требуют «найти минимум N проблем». Если проблем нет — агент явно пишет «не выявлено».
+6. **Explicit artifact tracking** — каждый выходной файл сохраняется в `.opencode/context/<name>.md`. Финальный отчёт оркестратора содержит пути ко всем артефактам.
+
+7. **No forced-finding quotas** — скиллы ревью/аудита не требуют «найти минимум N проблем». Если проблем нет — агент явно пишет «не выявлено».
 
 ---
 
@@ -92,7 +94,7 @@
 
 | Агент | Роль | Доступ |
 |-------|------|--------|
-| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, синтезирует отчёт. Не выполняет код сам. | `task`, `skill` (read-only) |
+| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, spot-check'ит, синтезирует отчёт. | `task`, `skill`, `read`, `grep` (только для верификации) |
 | `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read-only |
 | `architect-planner` | Проектировщик. Создаёт технические спецификации и планы в `PLAN.md`. | Read-only |
 | `implementer-builder` | Разработчик. Пишет код, тесты, документацию по спецификации. | Read, Write, Edit, Bash |
@@ -117,16 +119,16 @@
 | Сложность | Пайплайн | Цепочка агентов |
 |-----------|----------|-----------------|
 | Тривиально (1 файл) | **direct** | `implementer-builder` или `debug` |
-| Просто (2-3 файла) | **build** | researcher-explorer → implementer-builder → integrator-qa |
-| Стандартно (фича) | **build-review** | researcher-explorer → architect-planner → reviewer-critic → implementer-builder → reviewer-critic → integrator-qa |
+| Просто (2-3 файла) | **build** | researcher → architect → **spot-check** → implementer → **spot-check** → integrator-qa |
+| Стандартно (фича) | **build-review** | researcher → architect → **spot-check** → reviewer → implementer → **spot-check** → reviewer → integrator-qa |
 | Критично (auth, payments) | **full-cycle** | build-review → doc-maintainer |
-| Баг (неизвестная причина) | **debug-fix** | researcher-explorer → debug → implementer-builder → integrator-qa |
-| Аудит | **parallel-audit** | reviewer-critic ∥ security-auditor → synthesize |
+| Баг (неизвестная причина) | **debug-fix** | researcher → architect → debug → implementer → integrator-qa |
+| Аудит | **parallel-audit** | reviewer ∥ security-auditor → synthesize |
 | Исследование | **research** | researcher-explorer |
-| Планирование | **plan** | researcher-explorer → architect-planner |
-| Контент | **content** | researcher-explorer → content-writer → reviewer-critic |
-| Данные | **data** | researcher-explorer → data-analyst → reviewer-critic → integrator-qa |
-| Дизайн | **design** | researcher-explorer → ux-designer → reviewer-critic → implementer-builder |
+| Планирование | **plan** | researcher → architect |
+| Контент | **content** | researcher → content-writer → reviewer |
+| Данные | **data** | researcher → data-analyst → reviewer → integrator-qa |
+| Дизайн | **design** | researcher → ux-designer → reviewer → implementer |
 
 Для любого пайплайна можно добавить `→ doc-maintainer` в конце для автообновления проектной документации.
 
@@ -201,6 +203,7 @@ agentic-orchestrator-v1-better/
 | `plan-refiner` | 19 строк, без структуры | ~60 строк, с 4-секционной схемой и примером |
 | `debug` | 301 строка, дубли секций | ~130 строк, линейный workflow |
 | `skills-indexer` | отсутствовал SKILL.md | создан |
+| Spot-check verification | оркестратор не читал файлы | `read`/`grep` для точечной проверки, risk_areas + confidence у субагентов |
 
 ---
 
