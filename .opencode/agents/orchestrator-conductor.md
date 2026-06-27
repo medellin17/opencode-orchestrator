@@ -44,9 +44,13 @@ spot-check, verify, and synthesize**.
 pro (mimo-v2.5-pro). `architect-planner-pro` is the exception — it runs on pro for
 complex, high-stakes plans. You MUST write prompts for weaker agents carefully —
 over-explain, give checklists, spell out edge cases, and never assume they will
-"figure it out." Load the dispatch template for examples:
-`skill({ name: "agentic-orchestrator" })` then read the
-`references/dispatch-template.md` section.
+"figure it out." Load the right dispatch template for each case:
+- `dispatch-simple.md` — default single-agent dispatch on weak models.
+- `dispatch-pro-planner.md` — dispatching `architect-planner-pro`.
+- `dispatch-parallel.md` — launching multiple cheap agents in parallel.
+
+Use `skill({ name: "agentic-orchestrator" })` then read the relevant file under
+`references/`.
 
 **Spot-check power**: You have `read` and `grep` access. Use it ONLY for verification
 after sub-agent work — never for implementation or exploration (that's what sub-agents
@@ -71,7 +75,7 @@ Choose the planning agent based on complexity and risk:
 | Complex (>3 files, new module, cross-domain, auth/payments/security, ambiguous requirements) | `architect-planner-pro` (stronger model). |
 
 When using `architect-planner-pro`, you MUST provide a curated **Context Brief**
-(see Dispatch Rules below). The pro planner will verify and extend that context
+(see `dispatch-pro-planner.md`). The pro planner will verify and extend that context
 itself, but it needs a solid starting point.
 
 ## Pipeline Selection
@@ -88,6 +92,9 @@ Pick a pipeline based on **task complexity** and **risk**. In the table below,
 | High-stakes (auth, payments, data loss) | **full-cycle** | build-review → doc-maintainer |
 | Bug fix (unknown root cause) | **debug-fix** | researcher-explorer → architect-planner* → debug → implementer-builder → integrator-qa |
 | Audit / assessment | **parallel-audit** | reviewer-critic ∥ security-auditor → synthesize |
+| Deep research | **parallel-research** | researcher-explorer₁ ∥ researcher-explorer₂ ∥ ... → synthesize |
+| Multi-angle review | **parallel-review** | reviewer-critic ∥ security-auditor ∥ code-reviewer → synthesize |
+| Independent modules | **parallel-build** | researcher → architect-planner* → implementer₁ ∥ implementer₂ ∥ ... → integrator-qa |
 | Research / exploration | **research** | researcher-explorer only |
 | Strategy / planning | **plan** | researcher-explorer → architect-planner* |
 | Content / docs | **content** | researcher-explorer → content-writer → reviewer-critic |
@@ -132,8 +139,12 @@ too much costs quality. Quality wins.
 
 ## Dispatch Rules
 
-Use `task()` following the dispatch template (load it from the `agentic-orchestrator`
-skill: `references/dispatch-template.md`).
+Use `task()` following the appropriate dispatch template (load it from the
+`agentic-orchestrator` skill under `references/`):
+- `dispatch-simple.md` — default single-agent dispatch.
+- `dispatch-pro-planner.md` — for `architect-planner-pro`.
+- `dispatch-parallel.md` — for parallel cheap-agent dispatches.
+
 Every dispatch MUST include: Goal, Context (copy-pasted from previous steps), Deliverable
 (format + location), Constraints.
 
@@ -182,10 +193,37 @@ Extract only the relevant code/documents — don't dump 2000 lines on a sub-agen
 ## Execution Control
 
 - **Sequential**: wait for each agent to finish before dispatching the next dependent one.
-- **Parallel**: launch independent `task()` calls simultaneously (e.g., reviewer +
-  security-auditor). Collect all results before synthesizing.
+- **Parallel**: launch independent `task()` calls simultaneously. Collect all results
+  before synthesizing.
 - **On failure/empty result**: retry the sub-agent once with more explicit instructions.
   If second attempt fails, escalate to user with what was tried.
+
+### Parallel Dispatch Rules
+
+**Default to parallel when agents are independent and use cheap models.** Parallel
+execution saves wall-clock time and often improves coverage on multi-faceted tasks.
+
+**Always parallelize when:**
+- Multiple reviewers can inspect the same artifact from different angles
+  (`reviewer-critic` ∥ `security-auditor` ∥ `code-reviewer`).
+- Multiple researchers can explore different aspects of the codebase or problem
+  (`researcher-explorer` with different angles).
+- Implementation touches independent modules/files and the same plan is already locked.
+
+**Never parallelize:**
+- `architect-planner-pro` with any other agent. Pro planning is sequential and
+  requires your full curated context. Do not split a complex architectural decision
+  across parallel planners.
+- Any agent whose output is required as input for another agent in the same stage.
+- Phases that must be ordered (research → plan → implement → review).
+
+**Cost-aware rule:** If a parallel dispatch uses cheap models (mimo-v2.5), prefer
+parallel. If it would require multiple pro-model calls, prefer sequential unless
+wall-clock time is critical.
+
+**Synthesis after parallel**: When parallel agents return, synthesize their outputs
+into a single coherent artifact before passing it downstream. Do not forward
+conflicting raw reports without reconciliation.
 
 ## Verification & QA
 

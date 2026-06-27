@@ -141,8 +141,11 @@ high-stakes — `architect-planner-pro`.
 | Критично (auth, payments) | **full-cycle** | build-review → doc-maintainer |
 | Баг (неизвестная причина) | **debug-fix** | researcher → architect-planner* → debug → implementer → integrator-qa |
 | Аудит | **parallel-audit** | reviewer ∥ security-auditor → synthesize |
+| Глубокое исследование | **parallel-research** | researcher₁ ∥ researcher₂ ∥ ... → synthesize |
+| Многомерное ревью | **parallel-review** | reviewer ∥ security-auditor ∥ code-reviewer → synthesize |
+| Независимые модули | **parallel-build** | researcher → architect-planner* → implementer₁ ∥ implementer₂ → integrator-qa |
 | Исследование | **research** | researcher-explorer |
-| Планирование | **plan** | researcher → architect |
+| Планирование | **plan** | researcher → architect-planner* |
 | Контент | **content** | researcher → content-writer → reviewer |
 | Данные | **data** | researcher → data-analyst → reviewer → integrator-qa |
 | Дизайн | **design** | researcher → ux-designer → reviewer → implementer |
@@ -177,7 +180,10 @@ agentic-orchestrator-v1-better/
     ├── agentic-orchestrator/          # основной скилл оркестратора
     │   ├── SKILL.md
     │   └── references/
-    │       └── dispatch-template.md   # шаблон task() вызова + weak-model guide
+    │       ├── dispatch-template.md   # индекс шаблонов
+    │       ├── dispatch-simple.md     # шаблон обычного task() вызова
+    │       ├── dispatch-pro-planner.md # шаблон для architect-planner-pro
+    │       └── dispatch-parallel.md   # шаблон параллельных вызовов
     ├── plan-creator/                  # создание плана
     ├── plan-refiner/                  # доработка плана (переписан)
     ├── plan-reviewer/                 # ревью плана (5 проходов)

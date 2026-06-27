@@ -147,7 +147,30 @@ reviewer-critic  ∥  security-auditor  →  synthesize
 ```
 **Use when**: Auditing from multiple angles simultaneously.
 
-#### 8. `full-cycle` — Mission-Critical Task
+#### 8. `parallel-research` — Deep Multi-Angle Discovery
+```
+researcher-explorer₁  ∥  researcher-explorer₂  ∥  researcher-explorer₃  →  synthesize
+```
+**Use when**: The problem has several distinct facets (e.g., code + infra + docs) and
+cheap parallel exploration will give better coverage than one sequential pass.
+Each researcher gets a different angle in its prompt.
+
+#### 9. `parallel-review` — Multi-Dimensional Quality Gate
+```
+reviewer-critic  ∥  security-auditor  ∥  code-reviewer  →  synthesize
+```
+**Use when**: A non-trivial artifact needs correctness, security, and code-quality
+validation at the same time. Cheap reviewers run in parallel; conductor synthesizes.
+
+#### 10. `parallel-build` — Independent Module Implementation
+```
+researcher-explorer  →  architect-planner  →  implementer-builder₁  ∥  implementer-builder₂  →  integrator-qa
+```
+**Use when**: The plan defines clearly independent modules/files that can be built
+in parallel without stepping on each other. The plan MUST lock interfaces before
+parallel implementation starts.
+
+#### 11. `full-cycle` — Mission-Critical Task
 ```
 researcher-explorer  →  architect-planner  →  [conductor spot-check]  →  reviewer-critic
                       →  implementer-builder  →  [conductor spot-check]  →  reviewer-critic
@@ -156,7 +179,7 @@ researcher-explorer  →  architect-planner  →  [conductor spot-check]  →  r
 **Use when**: Complex, high-impact work where every phase needs validation, and docs must be updated.
 Conductor spot-checks after both architect and implementer before each review.
 
-#### 9. Auto-Documentation Modifier
+#### 12. Auto-Documentation Modifier
 ```
 Append `→ doc-maintainer` to the end of **any** pipeline above (e.g., `build-review → doc-maintainer`).
 ```
@@ -192,13 +215,34 @@ task({
 For verification, review, and QA steps:
 - You MUST give the verifying agent clear context on what was changed, why, and which files/sections are affected. Do not ask to verify lines in a vacuum; provide the goal of those changes so the agent can assess correctness.
 
+### Dispatch Templates
+
+Conductor should pick the right template from `skills/agentic-orchestrator/references/`:
+- `dispatch-simple.md` — default single-agent dispatch on weak models.
+- `dispatch-pro-planner.md` — `architect-planner-pro` with Context Brief.
+- `dispatch-parallel.md` — launching multiple cheap agents in parallel.
+
 ### Passing Context Between Steps
 
 Always copy-paste the relevant user request context, the active plan, and the previous sub-agent's exact output (research, draft, specs) into the next `task()` call under a `## Previous Context` section. This preserves continuity without relying on shared memory. Do not summarize or reference them abstractly.
 
 ### Handling Parallel Execution
 
-Launch independent `task()` calls in the same response. Collect all results before proceeding to dependent steps.
+Launch independent `task()` calls in the same response. Collect all results before
+proceeding to dependent steps.
+
+**When to parallelize:**
+- Independent reviewers on the same artifact.
+- Independent researchers with different angles.
+- Independent implementers working on separate modules after the plan is locked.
+
+**When NOT to parallelize:**
+- `architect-planner-pro` — complex planning must be sequential and fully curated.
+- Any task where one agent's output is another's input.
+- Ordered phases (research → plan → implement → review).
+
+**Cost rule**: Parallelize cheap (mimo-v2.5) agents by default; be selective with
+parallel pro-model calls.
 
 ### Handling Conditional Loops
 
