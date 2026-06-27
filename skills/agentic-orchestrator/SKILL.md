@@ -15,7 +15,8 @@ User Task (any domain)
     v
 Conductor (orchestrator-conductor)
     |---> researcher-explorer   (read-only investigation)
-    |---> architect-planner     (design & strategy)
+    |---> architect-planner     (design & strategy, simple tasks)
+    |---> architect-planner-pro (design & strategy, complex/high-stakes tasks)
     |---> [conductor spot-check] (read/grep verification of key areas)
     |---> implementer-builder   (execution & creation)
     |---> [conductor spot-check] (read/grep verification of risk areas)
@@ -38,7 +39,8 @@ Final Synthesis Report
 |-------|------|------|-----------|---------|
 | `orchestrator-conductor` | **Primary conductor.** Plans, delegates, spot-checks, synthesizes. | primary | `task`, `skill`, `read`, `grep` | All |
 | `researcher-explorer` | **Read-only exploration.** Maps code, data, content. | subagent | `read`, `grep`, `glob`, `webfetch` | All |
-| `architect-planner` | **Design & strategy.** Writes specs, no implementation. | subagent | `read`, `grep` (read-only) | Software, Systems, Content |
+| `architect-planner` | **Design & strategy.** Writes specs for simple/multi-file features. | subagent | `read`, `grep` (read-only) | Software, Systems, Content |
+| `architect-planner-pro` | **Senior design & strategy.** Complex, cross-domain, or high-stakes specs. | subagent | `read`, `grep` (read-only) | Software, Systems, Content |
 | `implementer-builder` | **Execution specialist.** Writes code, configs, scripts. | subagent | `read`, `edit`, `write`, `bash` | Software, Engineering |
 | `reviewer-critic` | **Audit & review.** Checks correctness, quality, compliance. | subagent | `read`, `grep` (read-only) | All |
 | `integrator-qa` | **Verification.** Runs tests, validates alignment. | subagent | `read`, `bash` | Software, Data |
@@ -92,6 +94,10 @@ When a new skill is created (local or global):
 ### Core Pipelines (Domain-Agnostic)
 
 All pipelines below work for **any domain**. Sub-agents adapt their output format to the task at hand.
+
+**Planner choice**: Use `architect-planner` for simple/multi-file features with clear
+constraints. Use `architect-planner-pro` for complex, cross-domain, or high-stakes
+work (auth, payments, new modules, ambiguous requirements).
 
 #### 1. `research` — Pure Discovery
 ```

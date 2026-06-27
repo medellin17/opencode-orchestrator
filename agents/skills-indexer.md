@@ -58,7 +58,7 @@ And map each skill to the agent(s) and pipeline(s) that use it.
       "description": "Retrieve ranked code context from SCR MCP server.",
       "location": ".opencode/skills/context-search/SKILL.md",
       "scope": "project",
-      "suggested_agents": ["researcher-explorer", "architect-planner"],
+      "suggested_agents": ["researcher-explorer", "architect-planner", "architect-planner-pro"],
       "tags": ["code", "search", "mcp"]
     }
   ]

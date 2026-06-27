@@ -60,12 +60,17 @@
     "orchestrator-conductor": {
       "model": "opencode-go/mimo-v2.5-pro",
       "thinking": { "type": "enabled", "reasoningEffort": "high" }
+    },
+    "architect-planner-pro": {
+      "model": "opencode-go/mimo-v2.5-pro",
+      "thinking": { "type": "enabled", "reasoningEffort": "high" }
     }
   }
 }
 ```
 
-Остальным агентам модель можно не указывать — они унаследуют глобальную `mimo-v2.5`.
+`orchestrator-conductor` и `architect-planner-pro` работают на pro-модели. Остальные
+агенты наследуют глобальную `mimo-v2.5`.
 
 ### 4. Создайте `AGENTS.md` в корне проекта
 
@@ -79,7 +84,8 @@
 |-------|------|--------|
 | `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, spot-check'ит, синтезирует отчёт. | `read`, `grep`, `task` (селективный), `skill` (селективный) |
 | `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read, Grep, Glob, Skill, LSP, Webfetch |
-| `architect-planner` | Проектировщик. Создаёт технические спецификации и планы. | Read, Write, Grep, Skill, LSP |
+| `architect-planner` | Проектировщик. Создаёт технические спецификации и планы для простых задач. | Read, Write, Grep, Skill, LSP |
+| `architect-planner-pro` | Старший проектировщик. Сложные, кросс-доменные или high-stakes планы (auth, payments, новые модули). | Read, Write, Grep, Skill, LSP |
 | `implementer-builder` | Разработчик. Пишет код, тесты, документацию по спецификации. | Read, Write, Edit, Grep, Skill, Bash, Webfetch |
 | `reviewer-critic` | Рецензент. Quality gate — проверяет планы и код. | Read, Grep, Skill, LSP |
 | `integrator-qa` | Тестировщик. Запускает тесты, проверяет соответствие ТЗ. | Read, Grep, Skill, Bash |
@@ -97,15 +103,17 @@
 
 ## Пайплайны работы
 
-Выбор пайплайна — автоматический, на основе сложности задачи:
+Выбор пайплайна — автоматический, на основе сложности задачи. `architect-planner*`
+означает: для простых задач используется `architect-planner`, для сложных или
+high-stakes — `architect-planner-pro`.
 
 | Сложность | Пайплайн | Цепочка агентов |
 |-----------|----------|-----------------|
 | Тривиально (1 файл) | **direct** | `implementer-builder` или `debug` |
-| Просто (2-3 файла) | **build** | researcher → architect → **spot-check** → implementer → **spot-check** → integrator-qa |
-| Стандартно (фича) | **build-review** | researcher → architect → **spot-check** → reviewer → implementer → **spot-check** → reviewer → integrator-qa |
+| Просто (2-3 файла) | **build** | researcher → architect-planner* → **spot-check** → implementer → **spot-check** → integrator-qa |
+| Стандартно (фича) | **build-review** | researcher → architect-planner* → **spot-check** → reviewer → implementer → **spot-check** → reviewer → integrator-qa |
 | Критично (auth, payments) | **full-cycle** | build-review → doc-maintainer |
-| Баг (неизвестная причина) | **debug-fix** | researcher → architect → debug → implementer → integrator-qa |
+| Баг (неизвестная причина) | **debug-fix** | researcher → architect-planner* → debug → implementer → integrator-qa |
 | Аудит | **parallel-audit** | reviewer ∥ security-auditor → synthesize |
 | Исследование | **research** | researcher-explorer |
 | Планирование | **plan** | researcher → architect |
@@ -125,7 +133,8 @@ agentic-orchestrator-v1-better/
 ├── agents/                            # определения агентов (.md)
 │   ├── orchestrator-conductor.md      # оркестратор (primary)
 │   ├── researcher-explorer.md         # исследователь
-│   ├── architect-planner.md           # проектировщик
+│   ├── architect-planner.md           # проектировщик (простые задачи)
+│   ├── architect-planner-pro.md       # старший проектировщик (сложные/high-stakes задачи)
 │   ├── implementer-builder.md         # разработчик
 │   ├── reviewer-critic.md             # рецензент
 │   ├── integrator-qa.md               # тестировщик
