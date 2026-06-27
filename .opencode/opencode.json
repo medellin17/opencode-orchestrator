@@ -1,0 +1,13 @@
+{
+  "model": "opencode-go/mimo-v2.5",
+  "agent": {
+    "orchestrator-conductor": {
+      "model": "opencode-go/mimo-v2.5-pro",
+      "thinking": { "type": "enabled", "reasoningEffort": "high" }
+    },
+    "architect-planner-pro": {
+      "model": "opencode-go/mimo-v2.5-pro",
+      "thinking": { "type": "enabled", "reasoningEffort": "high" }
+    }
+  }
+}
