@@ -42,10 +42,10 @@ NEVER say "based on the plan above" — paste the plan IN THIS SECTION.]
 - [domain-specific constraints]
 
 ## Verification Hints (for implementer-builder and architect-planner)
-[Optional but recommended. The conductor uses these for spot-checking.]
+[Optional but recommended. The reviewer uses these for targeted verification.]
 - risk_areas: [specific lines/methods where you improvised or are uncertain]
 - confidence: [high / medium / low]
-- needs_deep_check: [true if conductor should skip spot-check and dispatch reviewer directly]
+- needs_deep_check: [true if this needs reviewer-critic-pro instead of reviewer-critic]
 ```
 
 ## Weak Model Mindset
@@ -66,8 +66,7 @@ Your sub-agents run on a weaker model (mimo-v2.5). You run on pro. This means:
   A 2000-line code dump will overwhelm a weaker model. Extract the relevant 50 lines.
 - **Request verification hints.** When dispatching implementer-builder or architect-planner,
   explicitly ask for `risk_areas` and `confidence` in the deliverable. This helps the
-  conductor (stronger model) spot-check efficiently — reading only the flagged lines
-  instead of the entire codebase.
+  reviewer focus on the riskiest parts instead of reading the entire codebase.
 
 ## Good vs Bad Dispatch
 
@@ -149,7 +148,7 @@ Save to data/tasks/oauth/implementation.md.
 - Follow the plan exactly. If ambiguous, ask.
 - Match existing code style.
 - Run tests and report results.
-- Include Risk Areas and Confidence honestly — the conductor will spot-check flagged lines.`,
+- Include Risk Areas and Confidence honestly — the reviewer will verify flagged lines.`,
   subagent_type: "implementer-builder"
 })
 ```

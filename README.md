@@ -12,7 +12,7 @@
 
 2. **Weak-model-aware диспетчеризация** — оркестратор работает на pro-модели, а субагенты — на более слабой. Оркестратор пишет промпты с запасом: over-explain, numbered checklists, явные форматы выдачи, extract-only-relevant-context. Подробный dispatch-шаблон — в `skills/agentic-orchestrator/references/dispatch-template.md`.
 
-3. **Spot-check verification** — после ключевых шагов (implementer, architect) оркестратор **сам** читает файлы через `read`/`grep` для быстрой проверки. Субагенты возвращают `risk_areas` (конкретные строки где improvisировали) и `confidence` (high/medium/low). Оркестратор как более сильная модель проверяет эти точки, а не делегирует проверку целиком. Это экономит токены и ловит больше багов.
+3. **Делегированная верификация** — оркестратор **не читает файлы сам** (нет `read`/`grep` доступа). Вся проверка результатов делегируется `reviewer-critic` (для стандартных задач) или `reviewer-critic-pro` (для высокорисковых: auth, payments, security). Это соблюдает Single Responsibility и гарантирует, что проверку делает специализированный агент.
 
 4. **Just-in-Time контекст через `AGENTS.md`** — субагенты не загружают весь проект сразу. При старте они ищут `AGENTS.md` (или считывают глобальный `~/.config/opencode/AGENTS.md`) для получения команд сборки, линтера, тестов и правил кодинга.
 
@@ -70,12 +70,16 @@
     "architect-planner-pro": {
       "model": "opencode-go/mimo-v2.5-pro",
       "thinking": { "type": "enabled", "reasoningEffort": "high" }
+    },
+    "reviewer-critic-pro": {
+      "model": "opencode-go/mimo-v2.5-pro",
+      "thinking": { "type": "enabled", "reasoningEffort": "high" }
     }
   }
 }
 ```
 
-`orchestrator-conductor` и `architect-planner-pro` работают на pro-модели. Остальные
+`orchestrator-conductor`, `architect-planner-pro` и `reviewer-critic-pro` работают на pro-модели. Остальные
 агенты наследуют глобальную `mimo-v2.5`.
 
 ### Способ 2. Локальная установка через `.opencode/`
@@ -96,6 +100,7 @@
 Файл `.opencode/opencode.json` уже настроен:
 - `orchestrator-conductor` → `mimo-v2.5-pro`
 - `architect-planner-pro` → `mimo-v2.5-pro`
+- `reviewer-critic-pro` → `mimo-v2.5-pro`
 - остальные агенты → глобальная `mimo-v2.5`
 
 #### 2.1. Создайте `AGENTS.md` в корне проекта
@@ -108,12 +113,13 @@
 
 | Агент | Роль | Доступ |
 |-------|------|--------|
-| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, spot-check'ит, синтезирует отчёт. | `read`, `grep`, `task` (селективный), `skill` (селективный) |
+| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, синтезирует отчёт (не проверяет сам — делегирует reviewer'ам). | `task` (селективный), `skill` (селективный) — без `read`/`grep` |
 | `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read, Grep, Glob, Skill, LSP, Webfetch |
 | `architect-planner` | Проектировщик. Создаёт технические спецификации и планы для простых задач. | Read, Write, Grep, Skill, LSP |
 | `architect-planner-pro` | Старший проектировщик. Сложные, кросс-доменные или high-stakes планы (auth, payments, новые модули). | Read, Write, Grep, Skill, LSP |
 | `implementer-builder` | Разработчик. Пишет код, тесты, документацию по спецификации. | Read, Write, Edit, Grep, Skill, Bash, Webfetch |
-| `reviewer-critic` | Рецензент. Quality gate — проверяет планы и код. | Read, Grep, Skill, LSP |
+| `reviewer-critic` | Рецензент. Quality gate — проверяет планы и код (стандартные задачи). | Read, Grep, Skill, LSP |
+| `reviewer-critic-pro` | Старший рецензент. Глубокое ревью для high-stakes (auth, payments, security). | Read, Grep, Skill, LSP |
 | `integrator-qa` | Тестировщик. Запускает тесты, проверяет соответствие ТЗ. | Read, Grep, Skill, Bash |
 | `debug` | Отладчик. Поиск и устранение корневых причин багов. | Read, Write, Edit, Bash, Webfetch |
 | `doc-maintainer` | Документатор. Держит проектную базу знаний в актуальном состоянии. | Read, Write, Edit, Glob, Grep, Bash |
@@ -136,9 +142,9 @@ high-stakes — `architect-planner-pro`.
 | Сложность | Пайплайн | Цепочка агентов |
 |-----------|----------|-----------------|
 | Тривиально (1 файл) | **direct** | `implementer-builder` или `debug` |
-| Просто (2-3 файла) | **build** | researcher → architect-planner* → **spot-check** → implementer → **spot-check** → integrator-qa |
-| Стандартно (фича) | **build-review** | researcher → architect-planner* → **spot-check** → reviewer → implementer → **spot-check** → reviewer → integrator-qa |
-| Критично (auth, payments) | **full-cycle** | build-review → doc-maintainer |
+| Просто (2-3 файла) | **build** | researcher → architect-planner* → implementer → integrator-qa |
+| Стандартно (фича) | **build-review** | researcher → architect-planner* → reviewer-critic* → implementer → reviewer-critic* → integrator-qa |
+| Критично (auth, payments) | **full-cycle** | researcher → architect-planner-pro → reviewer-critic-pro → implementer → reviewer-critic-pro → integrator-qa → doc-maintainer |
 | Баг (неизвестная причина) | **debug-fix** | researcher → architect-planner* → debug → implementer → integrator-qa |
 | Аудит | **parallel-audit** | reviewer ∥ security-auditor → synthesize |
 | Глубокое исследование | **parallel-research** | researcher₁ ∥ researcher₂ ∥ ... → synthesize |
@@ -146,9 +152,9 @@ high-stakes — `architect-planner-pro`.
 | Независимые модули | **parallel-build** | researcher → architect-planner* → implementer₁ ∥ implementer₂ → integrator-qa |
 | Исследование | **research** | researcher-explorer |
 | Планирование | **plan** | researcher → architect-planner* |
-| Контент | **content** | researcher → content-writer → reviewer |
-| Данные | **data** | researcher → data-analyst → reviewer → integrator-qa |
-| Дизайн | **design** | researcher → ux-designer → reviewer → implementer |
+| Контент | **content** | researcher → content-writer → reviewer-critic* |
+| Данные | **data** | researcher → data-analyst → reviewer-critic* → integrator-qa |
+| Дизайн | **design** | researcher → ux-designer → reviewer-critic* → implementer |
 
 Для любого пайплайна можно добавить `→ doc-maintainer` в конце для автообновления проектной документации.
 
@@ -165,7 +171,8 @@ agentic-orchestrator-v1-better/
 │   ├── architect-planner.md           # проектировщик (простые задачи)
 │   ├── architect-planner-pro.md       # старший проектировщик (сложные/high-stakes задачи)
 │   ├── implementer-builder.md         # разработчик
-│   ├── reviewer-critic.md             # рецензент
+│   ├── reviewer-critic.md             # рецензент (стандартные задачи)
+│   ├── reviewer-critic-pro.md         # старший рецензент (high-stakes, deepseek-pro)
 │   ├── integrator-qa.md               # тестировщик
 │   ├── debug.md                       # отладчик (переписан — без дублей)
 │   ├── doc-maintainer.md              # документатор
@@ -228,8 +235,10 @@ agentic-orchestrator-v1-better/
 | `plan-refiner` | 19 строк, без структуры | ~60 строк, с 4-секционной схемой и примером |
 | `debug` | 301 строка, дубли секций | ~130 строк, линейный workflow |
 | `skills-indexer` | отсутствовал SKILL.md | создан |
-| Spot-check verification | оркестратор не читал файлы | `read`/`grep` для точечной проверки, risk_areas + confidence у субагентов |
-| `tools:` format | deprecated `tools:` секция (true/false) | миграция на `permission:` (allow/deny) во всех 15 агентах |
+| Верификация | оркестратор spot-check'ил сам через `read`/`grep` | оркестратор не имеет `read`/`grep` — вся проверка делегируется `reviewer-critic`/`reviewer-critic-pro` |
+
+| reviewer-critic-pro | отсутствовал | новый pro-агент для high-stakes ревью (deepseek-pro) |
+| `tools:` format | deprecated `tools:` секция (true/false) | миграция на `permission:` (allow/deny) во всех 16 агентах |
 | LSP | ни один агент не имел LSP | `lsp: allow` добавлен researcher, architect, reviewer |
 
 ---
@@ -237,6 +246,7 @@ agentic-orchestrator-v1-better/
 ## Модели
 
 - **Оркестратор**: `opencode-go/mimo-v2.5-pro` — pro-модель для сложной координации
+- **architect-planner-pro**, **reviewer-critic-pro**: `opencode-go/mimo-v2.5-pro` — pro-модель для сложных/high-stakes задач
 - **Все остальные агенты**: `opencode-go/mimo-v2.5` — базовая модель
 
 Оркестратор осведомлён о разнице в моделях и пишет промпты для субагентов с учётом этого.

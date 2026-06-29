@@ -137,7 +137,7 @@ and correctness. Explain in 1 sentence if medium or low.]
 5. **Mention dependencies** (npm/pip packages) that will need installation.
 6. **Flag any assumptions** you make about existing code.
 7. **Honest uncertainty.** Always include `Design Uncertainty` and `Confidence`.
-   The orchestrator will verify these spots.
+   The reviewer will verify these spots.
 8. **Prefer simple.** Do not introduce generic frameworks or premature
    abstractions. The simplest working design is the best design.
 

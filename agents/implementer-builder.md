@@ -74,4 +74,5 @@ auth.py:42-55 was not in the plan, I improvised it."]
 4. **Do not over-engineer.** The simplest solution that satisfies the spec is the best.
 5. **Run tests/lint** if available and report the result.
 6. **Never skip tests** unless explicitly told the project has no test infrastructure.
-7. **Honest self-assessment.** Always include `Risk Areas` and `Confidence` in your report. Flag specific lines where you improvised, deviated from the plan, or are unsure. The orchestrator (a stronger model) will verify these spots — help it by being specific.
+7. **Self-verify before reporting.** After implementation, run `skill({ name: "code-verifier" })` to check code against plan. Fix any regressions or deviations before writing your report.
+8. **Honest self-assessment.** Always include `Risk Areas` and `Confidence` in your report. Flag specific lines where you improvised, deviated from the plan, or are unsure. The reviewer will verify these spots — help it by being specific.
