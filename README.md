@@ -12,7 +12,7 @@
 
 2. **Weak-model-aware диспетчеризация** — оркестратор работает на pro-модели, а субагенты — на более слабой. Оркестратор пишет промпты с запасом: over-explain, numbered checklists, явные форматы выдачи, extract-only-relevant-context. Подробный dispatch-шаблон — в `skills/agentic-orchestrator/references/dispatch-template.md`.
 
-3. **Делегированная верификация** — оркестратор **не читает файлы сам** (нет `read`/`grep` доступа). Вся проверка результатов делегируется `reviewer-critic` (для стандартных задач) или `reviewer-critic-pro` (для высокорисковых: auth, payments, security). Это соблюдает Single Responsibility и гарантирует, что проверку делает специализированный агент.
+3. **Делегированная верификация + ограниченный read для навигации** — оркестратор **не читает исходный код** и **не верифицирует результаты сам**. Вся проверка делегируется `reviewer-critic` / `reviewer-critic-pro`. Однако оркестратор может прочитать начало `.md`-файла (план, ревью), чтобы извлечь структуру (заголовки, список файлов) и передать путь + выдержку субагентам. Это экономит контекст: не нужно копировать весь план в промпт.
 
 4. **Just-in-Time контекст через `AGENTS.md`** — субагенты не загружают весь проект сразу. При старте они ищут `AGENTS.md` (или считывают глобальный `~/.config/opencode/AGENTS.md`) для получения команд сборки, линтера, тестов и правил кодинга.
 
@@ -113,7 +113,7 @@
 
 | Агент | Роль | Доступ |
 |-------|------|--------|
-| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, синтезирует отчёт (не проверяет сам — делегирует reviewer'ам). | `task` (селективный), `skill` (селективный) — без `read`/`grep` |
+| `orchestrator-conductor` | Ведущий оркестратор. Планирует, делегирует, синтезирует отчёт (не проверяет сам — делегирует reviewer'ам). | `task` (селективный), `skill` (селективный), `read` (`.md` только, начало файла для навигации) |
 | `researcher-explorer` | Исследователь. Анализирует код, структуру, ищет взаимосвязи. | Read, Grep, Glob, Skill, LSP, Webfetch |
 | `architect-planner` | Проектировщик. Создаёт технические спецификации и планы для простых задач. | Read, Write, Grep, Skill, LSP |
 | `architect-planner-pro` | Старший проектировщик. Сложные, кросс-доменные или high-stakes планы (auth, payments, новые модули). | Read, Write, Grep, Skill, LSP |
@@ -150,6 +150,8 @@ high-stakes — `architect-planner-pro`.
 | Глубокое исследование | **parallel-research** | researcher₁ ∥ researcher₂ ∥ ... → synthesize |
 | Многомерное ревью | **parallel-review** | reviewer ∥ security-auditor ∥ code-reviewer → synthesize |
 | Независимые модули | **parallel-build** | researcher → architect-planner* → implementer₁ ∥ implementer₂ → integrator-qa |
+| Множественные варианты архитектуры | **parallel-plan** | researcher → planner₁ ∥ planner₂ → conductor select/merge |
+| Многопроходная валидация | **iterative-plan** | architect-planner → reviewer ∥ security ∥ code-reviewer → architect-planner (refine, max 2) → reviewer-critic (final) |
 | Исследование | **research** | researcher-explorer |
 | Планирование | **plan** | researcher → architect-planner* |
 | Контент | **content** | researcher → content-writer → reviewer-critic* |
@@ -187,10 +189,12 @@ agentic-orchestrator-v1-better/
     ├── agentic-orchestrator/          # основной скилл оркестратора
     │   ├── SKILL.md
     │   └── references/
-    │       ├── dispatch-template.md   # индекс шаблонов
-    │       ├── dispatch-simple.md     # шаблон обычного task() вызова
+    │       ├── dispatch-template.md    # индекс шаблонов
+    │       ├── dispatch-simple.md      # шаблон обычного task() вызова
     │       ├── dispatch-pro-planner.md # шаблон для architect-planner-pro
-    │       └── dispatch-parallel.md   # шаблон параллельных вызовов
+    │       ├── dispatch-parallel.md    # шаблон параллельных вызовов
+    │       ├── dispatch-parallel-plan.md # шаблон для parallel-plan pipeline
+    │       └── dispatch-iterative-plan.md # шаблон для iterative-plan pipeline
     ├── plan-creator/                  # создание плана
     ├── plan-refiner/                  # доработка плана (переписан)
     ├── plan-reviewer/                 # ревью плана (5 проходов)
@@ -235,7 +239,7 @@ agentic-orchestrator-v1-better/
 | `plan-refiner` | 19 строк, без структуры | ~60 строк, с 4-секционной схемой и примером |
 | `debug` | 301 строка, дубли секций | ~130 строк, линейный workflow |
 | `skills-indexer` | отсутствовал SKILL.md | создан |
-| Верификация | оркестратор spot-check'ил сам через `read`/`grep` | оркестратор не имеет `read`/`grep` — вся проверка делегируется `reviewer-critic`/`reviewer-critic-pro` |
+| Верификация | оркестратор spot-check'ил сам через `read`/`grep` | оркестратор не верифицирует сам — только делегирует. `read` есть только для `.md` (начало файла, для навигации по структуре плана) |
 
 | reviewer-critic-pro | отсутствовал | новый pro-агент для high-stakes ревью (deepseek-pro) |
 | `tools:` format | deprecated `tools:` секция (true/false) | миграция на `permission:` (allow/deny) во всех 16 агентах |
